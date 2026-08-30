@@ -1,4 +1,3 @@
-Set-Content -Path "edge_app.py" -Value @'
 import os
 import urllib.request
 import psutil
@@ -7,10 +6,14 @@ import streamlit as st
 try:
     from llama_cpp import Llama
 except ImportError:
-    st.error("Missing dependency! Run: pip install llama-cpp-python")
+    st.error("Missing dependency! Please ensure llama-cpp-python is listed in requirements.txt.")
     st.stop()
 
-st.set_page_config(page_title="Edge SLM Console", page_icon="⚡", layout="wide")
+st.set_page_config(
+    page_title="Edge SLM Console",
+    page_icon="⚡",
+    layout="wide"
+)
 
 MODEL_DIR = "models"
 MODEL_FILENAME = "llama-3.2-1b-instruct-q4_k_m.gguf"
@@ -39,14 +42,17 @@ def load_llm():
 
 llm = load_llm()
 
+# Sidebar Telemetry
 st.sidebar.title("Telemetry")
 ram = psutil.virtual_memory()
 cpu_pct = psutil.cpu_percent(interval=None)
+
 st.sidebar.metric(label="CPU Utilization", value=f"{cpu_pct}%")
 st.sidebar.metric(label="RAM Usage", value=f"{ram.percent}% ({round(ram.used / (1024**3), 2)} GB)")
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Runtime:** Embedded `llama-cpp-python`")
 
+# Chat UI
 st.title("⚡ Local Edge SLM Console")
 st.caption("Self-contained in-memory inference (zero network dependencies).")
 
@@ -65,6 +71,7 @@ if prompt := st.chat_input("Enter your prompt..."):
     with st.chat_message("assistant"):
         response_box = st.empty()
         full_response = ""
+
         formatted_prompt = f"<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\n{prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"
         
         stream = llm(
@@ -82,4 +89,3 @@ if prompt := st.chat_input("Enter your prompt..."):
 
         response_box.markdown(full_response)
         st.session_state.messages.append({"role": "assistant", "content": full_response})
-'@
